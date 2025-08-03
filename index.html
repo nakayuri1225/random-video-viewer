@@ -7,15 +7,26 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>ジェスドロチャレンジ</h1>
-    <div id="player-container">
-        <div id="player"></div>
+    <div id="api-key-section">
+        <h3>APIキー設定</h3>
+        <p>YouTube Data APIキーを入力してください。<br>APIキーはブラウザに保存され、外部には送信されません。</p>
+        <input type="password" id="api-key-input" placeholder="APIキーを入力">
+        <button id="save-api-key">保存</button>
     </div>
-    <button id="next-video">次の動画</button>
-    <button id="mark-as-done">できたよ！</button>
-    <button id="reset-list">履歴をリセット</button>
-    <h2>収穫した豆もやし</h2>
-    <ul id="done-list"></ul>
+
+    <div id="main-content" style="display: none;">
+        <h1>ジェスドロチャレンジ</h1>
+        <div id="player-container">
+            <div id="player"></div>
+        </div>
+        <div class="button-container">
+            <button id="next-video">次の動画</button>
+            <button id="mark-as-done">できたよ！</button>
+            <button id="reset-list">履歴をリセット</button>
+        </div>
+        <h2>収穫した豆もやし</h2>
+        <ul id="done-list"></ul>
+    </div>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
 </body>

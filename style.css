@@ -95,3 +95,30 @@ h2 {
 #done-list a:hover {
     text-decoration: underline;
 }
+
+/* API Key Section */
+#api-key-section {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+#api-key-input {
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#save-api-key {
+    background-color: #2f4f4f;
+    color: white;
+}
+#save-api-key:hover {
+    background-color: #1a2c2c;
+}

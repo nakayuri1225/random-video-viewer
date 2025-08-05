@@ -4,6 +4,9 @@ let doneVideoInfo = [];
 let apiKey = '';
 const CHANNEL_ID = 'UCA0dCpx0rxFfu9nnYByQSpA';
 
+let currentDate = new Date(); // カレンダーの現在表示月
+let selectedDate = null; // カレンダーで選択された日付
+
 // --- DOM Elements ---
 const apiKeySection = document.getElementById('api-key-section');
 const mainContent = document.getElementById('main-content');
@@ -13,6 +16,13 @@ const nextVideoBtn = document.getElementById('next-video');
 const markAsDoneBtn = document.getElementById('mark-as-done');
 const resetListBtn = document.getElementById('reset-list');
 
+const prevMonthBtn = document.getElementById('prev-month');
+const nextMonthBtn = document.getElementById('next-month');
+const currentMonthYearSpan = document.getElementById('current-month-year');
+const calendarGrid = document.getElementById('calendar-grid');
+const dailyVideoListDiv = document.getElementById('daily-video-list');
+const doneListUl = document.getElementById('done-list'); // 元のdone-listは非表示
+
 // --- Initialization ---
 function initializeApp() {
     apiKey = localStorage.getItem('youtubeApiKey');
@@ -21,6 +31,7 @@ function initializeApp() {
     if (apiKey) {
         apiKeySection.style.display = 'none';
         mainContent.style.display = 'block';
+        // YouTube APIスクリプトはHTMLでdefer読み込みなので、ここでは何もしない
     } else {
         apiKeySection.style.display = 'block';
         mainContent.style.display = 'none';
@@ -32,8 +43,7 @@ saveApiKeyBtn.addEventListener('click', () => {
     const key = apiKeyInput.value.trim();
     if (key) {
         localStorage.setItem('youtubeApiKey', key);
-        // ページをリロードして、クリーンな状態で初期化する
-        window.location.reload();
+        window.location.reload(); // ページをリロードして、クリーンな状態で初期化
     } else {
         alert('APIキーを入力してください。');
     }
@@ -43,10 +53,33 @@ nextVideoBtn.addEventListener('click', playRandomVideo);
 markAsDoneBtn.addEventListener('click', markAsDone);
 resetListBtn.addEventListener('click', resetList);
 
+prevMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+});
+
+nextMonthBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+});
+
 // --- Core Functions ---
+// YouTube IFrame Player APIの準備ができたときに呼ばれるグローバル関数
+window.onYouTubeIframeAPIReady = function() {
+    if (localStorage.getItem('youtubeApiKey')) {
+        player = new YT.Player('player', {
+            height: '100%',
+            width: '100%',
+            events: {
+                'onReady': onPlayerReady
+            }
+        });
+    }
+};
+
 function onPlayerReady(event) {
     fetchVideoIds();
-    renderDoneList();
+    renderCalendar(); // プレイヤー準備完了後にカレンダーも描画
 }
 
 async function fetchVideoIds() {
@@ -100,31 +133,8 @@ function markAsDone() {
     if (currentVideoId && !doneVideoInfo.some(info => info.id === currentVideoId)) {
         doneVideoInfo.push({ id: currentVideoId, title: currentVideoTitle, date: timestamp.toISOString() });
         localStorage.setItem('doneVideoInfo', JSON.stringify(doneVideoInfo));
-        renderDoneList();
-    }
-}
-
-function renderDoneList() {
-    const doneList = document.getElementById('done-list');
-    doneList.innerHTML = '';
-    for (const info of doneVideoInfo) {
-        const listItem = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = `https://www.youtube.com/watch?v=${info.id}`;
-        link.textContent = info.title;
-        link.target = '_blank';
-        listItem.appendChild(link);
-
-        if (info.date) {
-            const date = new Date(info.date);
-            const formattedDate = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}時${date.getMinutes()}分`;
-            const timeSpan = document.createElement('span');
-            timeSpan.textContent = ` (${formattedDate})`;
-            timeSpan.style.fontSize = '0.9em';
-            timeSpan.style.color = '#888';
-            listItem.appendChild(timeSpan);
-        }
-        doneList.appendChild(listItem);
+        renderCalendar(); // 完了したらカレンダーを再描画
+        renderDailyVideoList(selectedDate); // もし日付が選択されていればリストも更新
     }
 }
 
@@ -132,21 +142,115 @@ function resetList() {
     if (confirm('本当に完了済みリストをリセットしますか？')) {
         doneVideoInfo = [];
         localStorage.removeItem('doneVideoInfo');
-        renderDoneList();
+        renderCalendar(); // リセットしたらカレンダーを再描画
+        renderDailyVideoList(null); // 日別リストもクリア
         alert('完了済みリストをリセットしました。');
     }
 }
 
-// --- Global function for YouTube API ---
-function onYouTubeIframeAPIReady() {
-    if (localStorage.getItem('youtubeApiKey')) {
-        player = new YT.Player('player', {
-            height: '100%',
-            width: '100%',
-            events: {
-                'onReady': onPlayerReady
-            }
+// --- Calendar Functions ---
+function renderCalendar() {
+    calendarGrid.innerHTML = '';
+    dailyVideoListDiv.innerHTML = ''; // 日別リストをクリア
+    selectedDate = null; // 選択された日付をリセット
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    currentMonthYearSpan.textContent = `${year}年${month + 1}月`;
+
+    const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0:日, 1:月, ..., 6:土
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    dayNames.forEach(day => {
+        const dayNameCell = document.createElement('div');
+        dayNameCell.classList.add('day-name');
+        dayNameCell.textContent = day;
+        calendarGrid.appendChild(dayNameCell);
+    });
+
+    // 前月の空白セル
+    for (let i = 0; i < firstDayOfMonth; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.classList.add('day-cell', 'empty');
+        calendarGrid.appendChild(emptyCell);
+    }
+
+    // 今月の日付セル
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.classList.add('day-cell');
+        dayCell.textContent = day;
+        dayCell.dataset.date = new Date(year, month, day).toISOString();
+
+        const currentDay = new Date(year, month, day);
+        const hasVideos = doneVideoInfo.some(info => {
+            const videoDate = new Date(info.date);
+            return videoDate.getFullYear() === currentDay.getFullYear() &&
+                   videoDate.getMonth() === currentDay.getMonth() &&
+                   videoDate.getDate() === currentDay.getDate();
         });
+
+        if (hasVideos) {
+            dayCell.classList.add('has-videos');
+        }
+
+        dayCell.addEventListener('click', () => {
+            // 選択状態をリセット
+            document.querySelectorAll('.day-cell.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            // 新しい日付を選択状態に
+            dayCell.classList.add('selected');
+            selectedDate = new Date(dayCell.dataset.date);
+            renderDailyVideoList(selectedDate);
+        });
+
+        calendarGrid.appendChild(dayCell);
+    }
+}
+
+function renderDailyVideoList(date) {
+    dailyVideoListDiv.innerHTML = '';
+    if (!date) return; // 日付が選択されていなければ何もしない
+
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+
+    const videosForSelectedDay = doneVideoInfo.filter(info => {
+        const videoDate = new Date(info.date);
+        return videoDate.getFullYear() === year &&
+               videoDate.getMonth() === month &&
+               videoDate.getDate() === day;
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // 時系列順にソート
+
+    if (videosForSelectedDay.length > 0) {
+        const ul = document.createElement('ul');
+        videosForSelectedDay.forEach(info => {
+            const listItem = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = `https://www.youtube.com/watch?v=${info.id}`;
+            link.textContent = info.title;
+            link.target = '_blank';
+            listItem.appendChild(link);
+
+            const date = new Date(info.date);
+            const formattedTime = `${date.getHours()}時${date.getMinutes()}分`;
+            const timeSpan = document.createElement('span');
+            timeSpan.textContent = ` (${formattedTime})`;
+            timeSpan.style.fontSize = '0.9em';
+            timeSpan.style.color = '#888';
+            listItem.appendChild(timeSpan);
+
+            ul.appendChild(listItem);
+        });
+        dailyVideoListDiv.appendChild(ul);
+    } else {
+        const p = document.createElement('p');
+        p.textContent = 'この日に完了した動画はありません。';
+        dailyVideoListDiv.appendChild(p);
     }
 }
 

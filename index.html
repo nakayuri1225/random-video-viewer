@@ -25,7 +25,16 @@
             <button id="reset-list">履歴をリセット</button>
         </div>
         <h2>収穫した豆もやし</h2>
-        <ul id="done-list"></ul>
+        <div id="calendar-section">
+            <div class="calendar-nav">
+                <button id="prev-month">&lt;</button>
+                <span id="current-month-year"></span>
+                <button id="next-month">&gt;</button>
+            </div>
+            <div id="calendar-grid"></div>
+            <div id="daily-video-list"></div>
+        </div>
+        <ul id="done-list" style="display: none;"></ul>
     </div>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js" defer></script>

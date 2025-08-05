@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ジェスドロチャレンジ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="api-key-section">
+        <h3>APIキー設定</h3>
+        <p>YouTube Data APIキーを入力してください。<br>APIキーはブラウザに保存され、外部には送信されません。</p>
+        <input type="password" id="api-key-input" placeholder="APIキーを入力">
+        <button id="save-api-key">保存</button>
+    </div>
+
+    <div id="main-content" style="display: none;">
+        <h1>ジェスドロチャレンジ</h1>
+        <div id="player-container">
+            <div id="player"></div>
+        </div>
+        <div class="button-container">
+            <button id="next-video">次の動画</button>
+            <button id="mark-as-done">できたよ！</button>
+            <button id="reset-list">履歴をリセット</button>
+        </div>
+        <h2>収穫した豆もやし</h2>
+        <div id="calendar-section">
+            <div class="calendar-nav">
+                <button id="prev-month">&lt;</button>
+                <span id="current-month-year"></span>
+                <button id="next-month">&gt;</button>
+            </div>
+            <div id="calendar-grid"></div>
+            <div id="daily-video-list"></div>
+        </div>
+        <ul id="done-list" style="display: none;"></ul>
+    </div>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js" defer></script>
+</body>
+</html>

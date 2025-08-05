@@ -23,6 +23,9 @@ const calendarGrid = document.getElementById('calendar-grid');
 const dailyVideoListDiv = document.getElementById('daily-video-list');
 const doneListUl = document.getElementById('done-list'); // 元のdone-listは非表示
 
+const progressTextSpan = document.getElementById('progress-text');
+const progressBarDiv = document.getElementById('progress-bar');
+
 // --- Initialization ---
 function initializeApp() {
     apiKey = localStorage.getItem('youtubeApiKey');
@@ -31,7 +34,6 @@ function initializeApp() {
     if (apiKey) {
         apiKeySection.style.display = 'none';
         mainContent.style.display = 'block';
-        // YouTube APIスクリプトはHTMLでdefer読み込みなので、ここでは何もしない
     } else {
         apiKeySection.style.display = 'block';
         mainContent.style.display = 'none';
@@ -101,6 +103,7 @@ async function fetchVideoIds() {
             if (!nextPageToken) break;
         }
         playRandomVideo();
+        updateProgressBar(); // 動画リスト取得後にプログレスバーを更新
     } catch (error) {
         console.error('Error fetching video list:', error);
         alert(`動画リストの取得に失敗しました。APIキーが正しいか確認してください。\nエラー: ${error.message}`);
@@ -135,6 +138,7 @@ function markAsDone() {
         localStorage.setItem('doneVideoInfo', JSON.stringify(doneVideoInfo));
         renderCalendar(); // 完了したらカレンダーを再描画
         renderDailyVideoList(selectedDate); // もし日付が選択されていればリストも更新
+        updateProgressBar(); // 完了後にプログレスバーを更新
     }
 }
 
@@ -144,6 +148,7 @@ function resetList() {
         localStorage.removeItem('doneVideoInfo');
         renderCalendar(); // リセットしたらカレンダーを再描画
         renderDailyVideoList(null); // 日別リストもクリア
+        updateProgressBar(); // リセット後にプログレスバーを更新
         alert('完了済みリストをリセットしました。');
     }
 }
@@ -252,6 +257,20 @@ function renderDailyVideoList(date) {
         p.textContent = 'この日に完了した動画はありません。';
         dailyVideoListDiv.appendChild(p);
     }
+}
+
+// --- Progress Bar Function ---
+function updateProgressBar() {
+    const totalVideos = allVideoIds.length;
+    const completedVideos = doneVideoInfo.length;
+
+    let percentage = 0;
+    if (totalVideos > 0) {
+        percentage = (completedVideos / totalVideos) * 100;
+    }
+
+    progressTextSpan.textContent = `${completedVideos}/${totalVideos} (${percentage.toFixed(1)}%)`;
+    progressBarDiv.style.width = `${percentage}%`;
 }
 
 // --- Start the app ---

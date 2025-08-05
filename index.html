@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ジェスドロチャレンジ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hina+Mincho&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,6 +28,12 @@
             <button id="reset-list">履歴をリセット</button>
         </div>
         <h2>収穫した豆もやし</h2>
+        <div id="progress-section">
+            <p>進捗: <span id="progress-text">0/0 (0%)</span></p>
+            <div id="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
         <div id="calendar-section">
             <div class="calendar-nav">
                 <button id="prev-month">&lt;</button>
